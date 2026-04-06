@@ -1,0 +1,1294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Take Attendance - Face Recognition Attendance System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            font-family: "Inter", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Subtle background pattern */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 20%, rgba(59, 130, 246, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.05) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        /* Header banner */
+        .header-banner {
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+            border-radius: 0;
+            margin-bottom: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header-banner::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 50%);
+            pointer-events: none;
+        }
+        
+        .header-title {
+            font-size: 42px;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+        
+        .header-subtitle {
+            font-size: 18px;
+            opacity: 0.9;
+            margin-top: 10px;
+        }
+        
+        .camera-icon {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        /* Detection pill next to camera feed (top-right of the camera card) */
+        .detection-pill {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: #ffffff;
+            color: #1f2937;
+            border: 1px solid #e5e7eb;
+            padding: 14px 18px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 10px 24px rgba(0,0,0,0.1);
+            z-index: 5;
+        }
+
+        .detection-pill .pill-label {
+            font-weight: 800;
+            color: #3b82f6;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 18px;
+            line-height: 1.2;
+        }
+
+        .detection-pill .student-name {
+            color: #111827;
+            font-weight: 800;
+            font-size: 20px;
+            line-height: 1.2;
+        }
+
+        .detection-pill .face-status {
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 800;
+            text-transform: none;
+        }
+        .detection-pill .face-status.real {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+        .detection-pill .face-status.fake {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+        .detection-pill .face-status.unknown {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+        
+        /* Main content containers */
+        .content-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e5e7eb;
+            padding: 25px;
+            margin-bottom: 30px;
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 1;
+        }
+
+        .content-container:hover {
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+            border-color: #3b82f6;
+        }
+        
+        .section-title {
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            color: #1f2937;
+        }
+        
+        .section-title i {
+            margin-right: 10px;
+            color: #3b82f6;
+        }
+        
+        /* Camera feed */
+        .camera-feed-container {
+            border: 2px dashed #d1d5db;
+            border-radius: 12px;
+            min-height: 350px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            background-color: #f9fafb;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .camera-placeholder {
+            text-align: center;
+            color: #6b7280;
+        }
+        
+        #video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+        
+        /* Status indicators */
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 8px 12px;
+            border-radius: 50px;
+        }
+        
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        
+        .status-dot.red {
+            background-color: #ef4444;
+        }
+        
+        .status-dot.green {
+            background-color: #10b981;
+        }
+        
+        .status-text {
+            font-size: 14px;
+        }
+        
+        /* Stats cards */
+        .stats-card {
+            background: #3b82f6;
+            color: white;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(59, 130, 246, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .stats-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+        }
+        
+        .stats-number {
+            font-size: 48px;
+            font-weight: 700;
+            margin: 0;
+            line-height: 1;
+        }
+        
+        .stats-label {
+            font-size: 16px;
+            opacity: 0.9;
+            margin: 10px 0 0 0;
+        }
+        
+        /* Instructions */
+        .instructions-list {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .instructions-list li {
+            margin-bottom: 12px;
+            position: relative;
+            padding-left: 30px;
+            line-height: 1.5;
+        }
+        
+        .instructions-list li:before {
+            content: counter(item) "";
+            counter-increment: item;
+            position: absolute;
+            left: 0;
+            top: 0;
+            font-weight: 600;
+            color: #6366f1;
+        }
+        
+        .instructions-list {
+            counter-reset: item;
+        }
+        
+        /* System status */
+        .system-status {
+            border-radius: 10px;
+            padding: 15px;
+            background-color: #fee2e2;
+            margin-top: 20px;
+            color: #ef4444;
+        }
+        
+        /* Back button */
+        .back-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            color: white;
+            padding: 10px 16px;
+            border-radius: 10px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            font-weight: 600;
+        }
+        
+        .back-button:hover {
+            background: rgba(255, 255, 255, 0.25);
+            color: white;
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+        
+        .back-button i {
+            margin-right: 6px;
+        }
+        
+        /* Camera button */
+        .camera-button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 24px;
+            font-weight: 600;
+            margin-top: 15px;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 6px rgba(59, 130, 246, 0.25);
+        }
+        
+        .camera-button:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(59, 130, 246, 0.35);
+        }
+        
+        /* Detection display styles */
+        .detection-info {
+            margin-left: 20px;
+            font-size: 20px;
+            font-weight: 500;
+        }
+        
+        .student-name {
+            color: #3b82f6;
+            font-weight: 600;
+            margin-right: 10px;
+            font-size: 20px;
+        }
+        
+        .face-status {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .face-status.real {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+        
+        .face-status.fake {
+            background-color: #fef2f2;
+            color: #dc2626;
+        }
+        
+        .face-status.unknown {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+
+        /* Live detection box aligned to right */
+        .live-detection-box {
+            width: 100%;
+            max-width: 520px;
+        }
+
+        /* Remove top spacing before camera row */
+        .tight-top {
+            margin-top: 0 !important;
+        }
+
+        /* Motivational Quotes Box */
+        .motivation-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+            color: white;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .motivation-box::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: pulse 4s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+
+        .motivation-box:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .motivation-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .motivation-header i {
+            font-size: 28px;
+            margin-right: 12px;
+            opacity: 0.9;
+        }
+
+        .motivation-header h3 {
+            margin: 0;
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        .motivation-quote {
+            font-size: 18px;
+            line-height: 1.6;
+            font-style: italic;
+            margin: 15px 0;
+            position: relative;
+            z-index: 1;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+        }
+
+        .motivation-quote::before {
+            content: '"';
+            font-size: 60px;
+            line-height: 1;
+            opacity: 0.3;
+            position: absolute;
+            left: -10px;
+            top: -10px;
+            font-family: Georgia, serif;
+        }
+
+        .motivation-author {
+            font-size: 14px;
+            opacity: 0.9;
+            text-align: right;
+            margin-top: 10px;
+            position: relative;
+            z-index: 1;
+            font-weight: 500;
+        }
+
+        .motivation-emotion {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-left: 10px;
+            text-transform: capitalize;
+        }
+
+        .motivation-box.happy {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .motivation-box.sad {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .motivation-box.angry {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .motivation-box.surprise {
+            background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+        }
+
+        .motivation-box.fear {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .motivation-box.disgust {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+        }
+
+        .motivation-box.neutral {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header Banner -->
+    <div class="header-banner position-relative">
+        <a href="/" class="back-button">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+        <div class="camera-icon"></div>
+        <h1 class="header-title">Take Attendance</h1>
+        <p class="header-subtitle">Real-time face recognition for automatic attendance marking</p>
+    </div>
+
+    <div class="container">
+        <div class="row tight-top">
+            <!-- Camera Feed Section -->
+            <div class="col-lg-7 mb-4">
+                <div class="content-container">
+                    <h2 class="section-title">
+                        <i class="fas fa-video"></i> Live Camera Feed
+                    </h2>
+                    <!-- Live detection pill positioned inside the camera card -->
+                    <div class="detection-pill">
+                        <span class="pill-label"><i class="fas fa-user-check"></i> Live</span>
+                        <span id="detection-display" class="detection-info" style="display: none; margin: 0;">
+                            <span id="detected-student" class="student-name"></span>
+                            <span id="face-status" class="face-status"></span>
+                        </span>
+                        <span id="no-detection" class="text-muted" style="font-size:18px;font-weight:700;">No face detected</span>
+                    </div>
+                    
+                    
+                    <div class="camera-feed-container">
+                        <div class="camera-placeholder" id="camera-placeholder">
+                            <div>
+                                <i class="fas fa-camera fa-3x mb-3"></i>
+                                <p>Click "Start Camera" to begin</p>
+                            </div>
+                        </div>
+                        <video id="video" style="display: none;" autoplay></video>
+                    </div>
+                    
+                    <div class="text-center">
+                        <button id="startCameraBtn" class="camera-button">
+                            <i class="fas fa-play-circle me-2"></i> Start Camera
+                        </button>
+                        <button id="stopCameraBtn" class="camera-button" style="display: none; background-color: #ef4444;">
+                            <i class="fas fa-stop-circle me-2"></i> Stop Camera
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Attendance Status Section -->
+            <div class="col-lg-5 mb-4">
+                <!-- Motivational Quotes Box -->
+                <div class="motivation-box neutral" id="motivation-box" style="display: none;">
+                    <div class="motivation-header">
+                        <i class="fas fa-lightbulb"></i>
+                        <h3>Daily Motivation</h3>
+                        <span class="motivation-emotion" id="motivation-emotion">Neutral</span>
+                    </div>
+                    <div class="motivation-quote" id="motivation-quote">
+                        Welcome! Your emotion will be detected and a personalized quote will appear here.
+                    </div>
+                    <div class="motivation-author" id="motivation-author"></div>
+                </div>
+
+                <div class="content-container">
+                    <h2 class="section-title">
+                        <i class="fas fa-chart-bar"></i> Attendance Status
+                    </h2>
+                    
+                    <div class="status-indicator">
+                        <div class="status-dot red" id="camera-status-dot"></div>
+                        <div class="status-text" id="camera-status-text">Camera not started</div>
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <div class="stats-card">
+                                <div class="stats-number" id="total-students">0</div>
+                                <div class="stats-label">Total Students</div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="stats-card">
+                                <div class="stats-number" id="todays-attendance">0</div>
+                                <div class="stats-label">Today's Attendance</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h3 class="section-title mt-4">
+                        <i class="fas fa-info-circle"></i> Instructions
+                    </h3>
+                    
+                    <ul class="instructions-list">
+                        <li>Click "Start Camera" to begin</li>
+                        <li>Position your face in front of the camera</li>
+                        <li>System will automatically recognize and mark attendance</li>
+                        <li>Each student can only be marked once per day</li>
+                        <li>Make sure you are registered in the system first</li>
+                    </ul>
+                    
+                    <div class="system-status" id="system-status">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Error loading system status
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Today's Attendance List Section -->
+        <div class="row">
+            <div class="col-12 mb-4">
+                <div class="content-container">
+                    <h2 class="section-title">
+                        <i class="fas fa-list-check"></i> Today's Attendance List
+                        <small class="text-muted ms-2" id="last-updated" style="font-size: 14px; font-weight: normal;"></small>
+                    </h2>
+                    
+                    <div id="todays-attendance-list">
+                        <p class="text-center text-muted">Loading today's attendance...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Live Detection Results Section - Moved below camera feed -->
+        <div class="row justify-content-end">
+            <div class="col-12 col-lg-6 mb-1 live-detection-box">
+                <div class="content-container">
+                    <h2 class="section-title">
+                        <i class="fas fa-user-check"></i> Live Detection Details
+                    </h2>
+                    
+                    <div id="detection-results">
+                        <p class="text-center text-muted">Detection results will appear here once camera is started</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Global variables
+        let stream = null;
+        let processingInProgress = false;
+        let autoAttendanceInterval = null;
+        
+        // DOM elements
+        const video = document.getElementById('video');
+        const cameraPlaceholder = document.getElementById('camera-placeholder');
+        const startCameraBtn = document.getElementById('startCameraBtn');
+        const stopCameraBtn = document.getElementById('stopCameraBtn');
+        const cameraStatusDot = document.getElementById('camera-status-dot');
+        const cameraStatusText = document.getElementById('camera-status-text');
+        const totalStudents = document.getElementById('total-students');
+        const todaysAttendance = document.getElementById('todays-attendance');
+        const systemStatus = document.getElementById('system-status');
+        const detectionResults = document.getElementById('detection-results');
+        const motivationBox = document.getElementById('motivation-box');
+        const motivationQuote = document.getElementById('motivation-quote');
+        const motivationAuthor = document.getElementById('motivation-author');
+        const motivationEmotion = document.getElementById('motivation-emotion');
+
+        // Helper functions for identifying unknown faces
+        function normalizeStudentId(studentId) {
+            if (studentId === undefined || studentId === null) return '';
+            return studentId.toString().trim();
+        }
+
+        function isUnknownStudent(face) {
+            if (!face) return true;
+            const normalizedId = normalizeStudentId(face.student_id);
+            return !normalizedId || normalizedId.toLowerCase() === 'unknown';
+        }
+
+        // Motivational quotes for each emotion
+        const motivationQuotes = {
+            happy: [
+                { quote: "Your smile is contagious! Keep spreading that positive energy and watch how it transforms your day and those around you.", author: "Anonymous" },
+                { quote: "Happiness is not something ready made. It comes from your own actions. Keep doing what makes you happy!", author: "Dalai Lama" },
+                { quote: "The joy you feel today is the strength you have for tomorrow. Embrace this moment!", author: "Anonymous" },
+                { quote: "Your positive attitude is your greatest asset. Keep shining bright!", author: "Anonymous" },
+                { quote: "Success is not the key to happiness. Happiness is the key to success. You're on the right track!", author: "Albert Schweitzer" }
+            ],
+            sad: [
+                { quote: "It's okay to feel down sometimes. Remember, even the darkest nights end with a sunrise. You've got this!", author: "Anonymous" },
+                { quote: "Tough times don't last, but tough people do. You are stronger than you think.", author: "Robert H. Schuller" },
+                { quote: "Every storm runs out of rain. Keep moving forward, better days are ahead.", author: "Maya Angelou" },
+                { quote: "You are not alone in this. Reach out, talk to someone, and remember that this feeling will pass.", author: "Anonymous" },
+                { quote: "The comeback is always stronger than the setback. Your resilience will carry you through.", author: "Anonymous" }
+            ],
+            angry: [
+                { quote: "Take a deep breath. Channel this energy into something positive. You have the power to transform frustration into motivation.", author: "Anonymous" },
+                { quote: "Anger is an energy. Use it to fuel positive change rather than destructive actions.", author: "Anonymous" },
+                { quote: "In the middle of difficulty lies opportunity. Turn this moment into a stepping stone for growth.", author: "Albert Einstein" },
+                { quote: "Calm mind brings inner strength and self-confidence. Take a moment to center yourself.", author: "Dalai Lama" },
+                { quote: "Your reaction to challenges defines your character. Choose to respond with wisdom and strength.", author: "Anonymous" }
+            ],
+            surprise: [
+                { quote: "Life is full of surprises! Embrace the unexpected and see it as an opportunity for growth and adventure.", author: "Anonymous" },
+                { quote: "The best things in life are often unexpected. Stay open to new possibilities!", author: "Anonymous" },
+                { quote: "Surprises keep life interesting. Welcome them with curiosity and an open heart.", author: "Anonymous" },
+                { quote: "Every surprise is a chance to learn something new about yourself and the world around you.", author: "Anonymous" },
+                { quote: "Stay curious! The most beautiful moments often come when we least expect them.", author: "Anonymous" }
+            ],
+            fear: [
+                { quote: "Courage is not the absence of fear, but the decision that something else is more important. You are braver than you believe.", author: "Winston Churchill" },
+                { quote: "Feel the fear and do it anyway. Growth happens outside your comfort zone.", author: "Susan Jeffers" },
+                { quote: "Fear is just a feeling. It doesn't have the power to stop you unless you let it. Keep moving forward!", author: "Anonymous" },
+                { quote: "You have survived 100% of your worst days. You've got this!", author: "Anonymous" },
+                { quote: "The only way to overcome fear is to face it. You are stronger than your fears.", author: "Anonymous" }
+            ],
+            disgust: [
+                { quote: "Sometimes we need to step back and refocus. Use this moment to realign with what truly matters to you.", author: "Anonymous" },
+                { quote: "Negative feelings can be signals for change. Listen to what they're telling you and make positive adjustments.", author: "Anonymous" },
+                { quote: "Turn your dissatisfaction into determination. What can you change today to make things better?", author: "Anonymous" },
+                { quote: "Every challenge is an opportunity in disguise. Look for the lesson and the growth.", author: "Anonymous" },
+                { quote: "You have the power to change your perspective. Focus on what you can control and let go of the rest.", author: "Anonymous" }
+            ],
+            neutral: [
+                { quote: "Every day is a fresh start. Take a moment to set your intentions and make today count!", author: "Anonymous" },
+                { quote: "Small steps every day lead to big achievements. Keep moving forward, one step at a time.", author: "Anonymous" },
+                { quote: "Balance is key. Take time to breathe, reflect, and appreciate the present moment.", author: "Anonymous" },
+                { quote: "You are exactly where you need to be. Trust the process and keep going.", author: "Anonymous" },
+                { quote: "Consistency beats perfection. Show up every day and give your best effort.", author: "Anonymous" }
+            ]
+        };
+
+        // Function to get a random quote for an emotion
+        function getMotivationalQuote(emotion) {
+            const emotionKey = emotion ? emotion.toLowerCase() : 'neutral';
+            const quotes = motivationQuotes[emotionKey] || motivationQuotes.neutral;
+            const randomIndex = Math.floor(Math.random() * quotes.length);
+            return quotes[randomIndex];
+        }
+
+        // Function to update motivation box
+        function updateMotivationBox(emotion) {
+            if (!emotion) {
+                motivationBox.style.display = 'none';
+                return;
+            }
+
+            const emotionKey = emotion.toLowerCase();
+            const quoteData = getMotivationalQuote(emotion);
+            
+            // Update emotion label
+            motivationEmotion.textContent = emotion.charAt(0).toUpperCase() + emotion.slice(1);
+            
+            // Update quote
+            motivationQuote.textContent = quoteData.quote;
+            
+            // Update author
+            motivationAuthor.textContent = `— ${quoteData.author}`;
+            
+            // Update box class for styling
+            motivationBox.className = 'motivation-box ' + emotionKey;
+            
+            // Show the box
+            motivationBox.style.display = 'block';
+        }
+        
+        // Load initial data
+        loadAttendanceStats();
+        
+        // Start camera
+        startCameraBtn.addEventListener('click', async function() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' }
+                });
+                
+                video.srcObject = stream;
+                cameraPlaceholder.style.display = 'none';
+                video.style.display = 'block';
+                startCameraBtn.style.display = 'none';
+                stopCameraBtn.style.display = 'inline-block';
+                
+                // Update status indicator
+                cameraStatusDot.classList.remove('red');
+                cameraStatusDot.classList.add('green');
+                cameraStatusText.textContent = 'Camera active - Scanning for faces';
+                
+                // Start auto attendance process
+                startAutoAttendance();
+                
+                // Update system status
+                systemStatus.style.backgroundColor = '#f0fdf4';
+                systemStatus.style.color = '#10b981';
+                systemStatus.innerHTML = '<i class="fas fa-check-circle me-2"></i>System active and scanning for faces';
+                
+                // Show motivation box with neutral quote when camera starts
+                updateMotivationBox('neutral');
+                
+            } catch (err) {
+                console.error('Error accessing camera:', err);
+                systemStatus.innerHTML = `<i class="fas fa-exclamation-triangle me-2"></i>Error accessing camera: ${err.message}`;
+            }
+        });
+        
+        // Stop camera
+        stopCameraBtn.addEventListener('click', function() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                video.srcObject = null;
+                stream = null;
+            }
+            
+            cameraPlaceholder.style.display = 'flex';
+            video.style.display = 'none';
+            startCameraBtn.style.display = 'inline-block';
+            stopCameraBtn.style.display = 'none';
+            
+            // Update status indicator
+            cameraStatusDot.classList.remove('green');
+            cameraStatusDot.classList.add('red');
+            cameraStatusText.textContent = 'Camera not started';
+            
+            // Stop auto attendance
+            if (autoAttendanceInterval) {
+                clearInterval(autoAttendanceInterval);
+                autoAttendanceInterval = null;
+            }
+            
+            // Update system status
+            systemStatus.style.backgroundColor = '#fee2e2';
+            systemStatus.style.color = '#ef4444';
+            systemStatus.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Camera stopped - attendance marking inactive';
+                
+                // Hide motivation box when camera stops
+                motivationBox.style.display = 'none';
+        });
+        
+        // Auto attendance process
+        function startAutoAttendance() {
+            if (autoAttendanceInterval) {
+                clearInterval(autoAttendanceInterval);
+            }
+            
+            // Process immediately on start
+            captureAndProcessFrame();
+            
+            // Set up a dynamic interval that adjusts based on whether faces are being recognized
+            let consecutiveNoFaces = 0;
+            let intervalTime = 4000; // Start with 4 second interval
+            
+            autoAttendanceInterval = setInterval(() => {
+                // Only process if not already processing
+                if (!processingInProgress) {
+                    captureAndProcessFrame();
+                } else {
+                    console.log("Skipping frame capture - processing still in progress");
+                }
+                
+                // Adjust interval based on detection results
+                const lastResultsText = detectionResults.textContent;
+                if (lastResultsText.includes("No faces detected")) {
+                    consecutiveNoFaces++;
+                    // Gradually decrease interval time for faster scanning when no faces detected
+                    if (consecutiveNoFaces > 3) {
+                        intervalTime = 3000; // Faster scanning when no faces found
+                        updateInterval();
+                    }
+                } else if (lastResultsText.includes("Successfully marked attendance")) {
+                    // Slow down scanning after successful attendance marking
+                    consecutiveNoFaces = 0;
+                    intervalTime = 6000; 
+                    updateInterval();
+                } else if (lastResultsText.includes("Already Marked")) {
+                    // Slow down when face is recognized but already marked
+                    consecutiveNoFaces = 0;
+                    intervalTime = 5000;
+                    updateInterval();
+                } else {
+                    // Reset counter for other cases
+                    consecutiveNoFaces = 0;
+                }
+            }, intervalTime);
+            
+            // Helper function to update interval timing
+            function updateInterval() {
+                clearInterval(autoAttendanceInterval);
+                autoAttendanceInterval = setInterval(() => {
+                    if (!processingInProgress) {
+                        captureAndProcessFrame();
+                    }
+                }, intervalTime);
+            }
+        }
+        
+        // Capture and process video frame
+        function captureAndProcessFrame() {
+            if (!stream || processingInProgress) return;
+            
+            processingInProgress = true;
+            
+            try {
+                // Update status indicator to show processing is happening
+                cameraStatusText.textContent = 'Processing face...';
+                
+                // Create a canvas to capture the current frame
+                const canvas = document.createElement('canvas');
+                
+                // Make sure video dimensions are valid
+                if (!video.videoWidth || !video.videoHeight) {
+                    console.warn("Video dimensions not ready yet");
+                    processingInProgress = false;
+                    setTimeout(captureAndProcessFrame, 1000); // Try again in 1 second
+                    return;
+                }
+                
+                // Set canvas dimensions
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                const ctx = canvas.getContext('2d');
+                
+                // Draw video frame to canvas
+                try {
+                    ctx.drawImage(video, 0, 0);
+                } catch (drawError) {
+                    console.error("Error drawing video to canvas:", drawError);
+                    processingInProgress = false;
+                    systemStatus.style.backgroundColor = '#fee2e2';
+                    systemStatus.style.color = '#ef4444';
+                    systemStatus.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Error capturing video frame. Please restart camera.';
+                    return;
+                }
+                
+                // Convert to base64 with higher quality (0.9)
+                const imageData = canvas.toDataURL('image/jpeg', 0.9);
+                
+                // Send to server for processing
+                fetch('/process_attendance', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ image: imageData })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        // Handle HTTP errors (like 400, 500)
+                        return response.json().then(errorData => {
+                            throw new Error(errorData.message || errorData.error || 'Server error');
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    processingInProgress = false;
+                    
+                    if (data.success) {
+                        // Update attendance stats
+                        loadAttendanceStats();
+                        
+                        // Update detection results
+                        updateDetectionResults(data);
+                        
+                        // Update motivation box with detected emotion
+                        if (data.faces && data.faces.length > 0 && data.faces[0].emotion) {
+                            updateMotivationBox(data.faces[0].emotion);
+                        } else {
+                            motivationBox.style.display = 'none';
+                        }
+                        
+                        // Update camera status
+                        cameraStatusText.textContent = data.faces && data.faces.length > 0 ? 
+                            'Face detected - Processing complete' : 'Camera active - No faces detected';
+                        
+                        // Update system status
+                        systemStatus.style.backgroundColor = '#f0fdf4';
+                        systemStatus.style.color = '#10b981';
+                        systemStatus.innerHTML = '<i class="fas fa-check-circle me-2"></i>Attendance processing successful';
+                    } else {
+                        console.error('Attendance processing failed:', data.error || data.message);
+                        systemStatus.style.backgroundColor = '#fee2e2';
+                        systemStatus.style.color = '#ef4444';
+                        systemStatus.innerHTML = `<i class="fas fa-exclamation-triangle me-2"></i>Error: ${data.error || data.message || 'Unknown error'}`;
+                        
+                        // Reset camera status
+                        cameraStatusText.textContent = 'Camera active - Scanning for faces';
+                    }
+                })
+                .catch(error => {
+                    processingInProgress = false;
+                    console.error('Error processing attendance:', error);
+                    systemStatus.style.backgroundColor = '#fee2e2';
+                    systemStatus.style.color = '#ef4444';
+                    systemStatus.innerHTML = `<i class="fas fa-exclamation-triangle me-2"></i>Connection error: ${error.message}`;
+                    
+                    // Reset camera status
+                    cameraStatusText.textContent = 'Camera active - Scanning for faces';
+                });
+            } catch (error) {
+                console.error('Error in captureAndProcessFrame:', error);
+                processingInProgress = false;
+                cameraStatusText.textContent = 'Camera active - Scanning for faces';
+            }
+        }
+        
+        // Update detection results display
+        function updateDetectionResults(data) {
+            const faces = Array.isArray(data.faces) ? data.faces : [];
+            const totalFaces = Number(data.total_faces) || 0;
+            let displayFaces = faces;
+            if (!displayFaces.length && totalFaces > 0) {
+                const placeholderFace = {
+                    student_id: 'Unknown',
+                    name: 'Unknown Person',
+                    marked: false,
+                    already_marked: false,
+                    confidence: 0,
+                    anti_spoof_score: 0.0,
+                    is_real: true,
+                    emotion: 'Unknown',
+                    emotion_confidence: 0.0
+                };
+                displayFaces = [placeholderFace];
+            }
+
+            updateHeaderDetection(displayFaces, totalFaces);
+
+            if (displayFaces.length > 0) {
+                // Display detected faces and results
+                let resultsHTML = '<div class="table-responsive"><table class="table table-striped">';
+                resultsHTML += '<thead><tr><th>Student ID</th><th>Name</th><th>Status</th><th>Emotion</th><th>Anti-Spoofing</th><th>Time</th><th>Confidence</th></tr></thead><tbody>';
+                
+                displayFaces.forEach(face => {
+                    const isUnknownFace = isUnknownStudent(face);
+                    
+                    let statusClass, statusIcon, status;
+                    
+                    if (isUnknownFace) {
+                        statusClass = 'text-warning';
+                        statusIcon = '<i class="fas fa-question-circle"></i>';
+                        status = 'Unrecognized';
+                    } else if (face.marked) {
+                        statusClass = 'text-success';
+                        statusIcon = '<i class="fas fa-check-circle"></i>';
+                        status = 'Marked Present';
+                    } else if (face.already_marked) {
+                        statusClass = 'text-info';
+                        statusIcon = '<i class="fas fa-info-circle"></i>';
+                        status = 'Already Marked';
+                    } else {
+                        statusClass = 'text-danger';
+                        statusIcon = '<i class="fas fa-times-circle"></i>';
+                        status = 'Failed to Mark';
+                    }
+                    
+                    // Format confidence value for display
+                    let confidenceDisplay = 'N/A';
+                    if (face.confidence !== undefined && face.confidence !== null) {
+                        // Make sure confidence is a number and between 0-1
+                        const confValue = parseFloat(face.confidence);
+                        if (!isNaN(confValue)) {
+                            confidenceDisplay = (confValue >= 0 && confValue <= 1) ? 
+                                Math.round(confValue * 100) + '%' : 
+                                confValue.toFixed(2);
+                        }
+                    }
+                    
+                    // Format anti-spoofing result
+                    let antiSpoofDisplay = 'N/A';
+                    let antiSpoofClass = '';
+                    let antiSpoofIcon = '';
+                    if (face.is_real !== undefined) {
+                        if (face.is_real) {
+                            antiSpoofDisplay = `✅ Real (${(face.anti_spoof_score * 100).toFixed(1)}%)`;
+                            antiSpoofClass = 'text-success';
+                            antiSpoofIcon = '<i class="fas fa-check-circle"></i> ';
+                        } else {
+                            // Fake face - make it very prominent
+                            antiSpoofDisplay = `⚠️ FAKE FACE (${(face.anti_spoof_score * 100).toFixed(1)}%)`;
+                            antiSpoofClass = 'text-danger fw-bold';
+                            antiSpoofIcon = '<i class="fas fa-exclamation-triangle"></i> ';
+                        }
+                    } else {
+                        antiSpoofDisplay = 'Unavailable';
+                        antiSpoofClass = 'text-muted';
+                    }
+                    
+                    // Bold row for successfully marked attendance
+                    const rowClass = face.marked ? 'fw-bold' : '';
+                    
+                    resultsHTML += `
+                        <tr class="${rowClass}">
+                            <td>${face.student_id || 'Unknown'}</td>
+                            <td>${face.name || 'Unrecognized Face'}</td>
+                            <td class="${statusClass}">${statusIcon} ${status}</td>
+                            <td>${(face.emotion ? face.emotion : 'Unknown')}${(face.emotion_confidence ? ' (' + Math.round(face.emotion_confidence * 100) + '%)' : '')}</td>
+                            <td class="${antiSpoofClass}">${antiSpoofIcon}${antiSpoofDisplay}</td>
+                            <td>${new Date().toLocaleTimeString()}</td>
+                            <td>${confidenceDisplay}</td>
+                        </tr>
+                    `;
+                });
+                
+                resultsHTML += '</tbody></table></div>';
+                
+                // Add a summary above the table
+                const markedCount = displayFaces.filter(face => face.marked).length;
+                const alreadyMarkedCount = displayFaces.filter(face => face.already_marked).length;
+                const unknownCount = faces.length > 0 ? faces.filter(isUnknownStudent).length : totalFaces;
+                const fakeFaceCount = displayFaces.filter(face => face.is_real === false).length;
+                
+                let summaryHTML = '<div class="alert ';
+                if (fakeFaceCount > 0) {
+                    summaryHTML += 'alert-danger';
+                } else if (markedCount > 0) {
+                    summaryHTML += 'alert-success';
+                } else if (alreadyMarkedCount > 0) {
+                    summaryHTML += 'alert-info';
+                } else if (unknownCount > 0) {
+                    summaryHTML += 'alert-warning';
+                } else {
+                    summaryHTML += 'alert-secondary';
+                }
+                summaryHTML += ' mb-3">';
+                
+                // Show fake face warning first and prominently
+                if (fakeFaceCount > 0) {
+                    summaryHTML += `<i class="fas fa-exclamation-triangle me-2"></i><strong>${fakeFaceCount}</strong> <strong>FAKE FACE(S) DETECTED!</strong> Attendance will not be marked. `;
+                }
+                if (markedCount > 0) {
+                    summaryHTML += `<i class="fas fa-check-circle me-2"></i>Successfully marked attendance for <strong>${markedCount}</strong> student(s)! `;
+                }
+                if (alreadyMarkedCount > 0) {
+                    summaryHTML += `<i class="fas fa-info-circle me-2"></i><strong>${alreadyMarkedCount}</strong> student(s) already marked today. `;
+                }
+                if (unknownCount > 0) {
+                    summaryHTML += `<i class="fas fa-question-circle me-2"></i><strong>${unknownCount}</strong> face(s) not recognized. `;
+                }
+                
+                summaryHTML += '</div>';
+                
+                detectionResults.innerHTML = summaryHTML + resultsHTML;
+            } else {
+                detectionResults.innerHTML = '<div class="alert alert-warning"><i class="fas fa-exclamation-triangle me-2"></i>No faces detected in the current frame. Please adjust your position or lighting.</div>';
+            }
+        }
+        
+        // Update header detection display
+        function updateHeaderDetection(faces, totalFaces) {
+            const detectionDisplay = document.getElementById('detection-display');
+            const detectedStudent = document.getElementById('detected-student');
+            const faceStatus = document.getElementById('face-status');
+            const noDetection = document.getElementById('no-detection');
+
+            const faceList = Array.isArray(faces) ? faces : [];
+            const hasFaceData = faceList.length > 0;
+            const hasAnyFace = totalFaces > 0;
+
+            if (hasFaceData || hasAnyFace) {
+                let faceToShow = null;
+                if (hasFaceData) {
+                    faceToShow = faceList.find(isUnknownStudent) || faceList[0];
+                } else {
+                    faceToShow = {
+                        student_id: 'Unknown',
+                        name: 'Unknown Person',
+                        is_real: true,
+                        anti_spoof_score: 0.0,
+                        emotion: 'Unknown'
+                    };
+                }
+
+                const faceIsUnknown = isUnknownStudent(faceToShow);
+
+                if (!faceIsUnknown) {
+                    detectedStudent.textContent = faceToShow.name || faceToShow.student_id || 'Student';
+                    detectedStudent.style.display = 'inline';
+                    
+                    if (faceToShow.is_real !== undefined) {
+                        if (faceToShow.is_real) {
+                            faceStatus.textContent = `Real Face (${(faceToShow.anti_spoof_score * 100).toFixed(1)}%)`;
+                            faceStatus.className = 'face-status real';
+                            faceStatus.style.color = '';
+                            faceStatus.style.fontWeight = '';
+                        } else {
+                            // Fake face detected - make it very prominent
+                            faceStatus.textContent = `⚠️ FAKE FACE (${(faceToShow.anti_spoof_score * 100).toFixed(1)}%)`;
+                            faceStatus.className = 'face-status fake';
+                            faceStatus.style.color = '#dc3545';
+                            faceStatus.style.fontWeight = 'bold';
+                        }
+                        if (faceToShow.emotion) {
+                            faceStatus.textContent += ` • ${faceToShow.emotion}`;
+                        }
+                    } else {
+                        faceStatus.textContent = 'Anti-spoofing unavailable';
+                        faceStatus.className = 'face-status unknown';
+                        faceStatus.style.color = '';
+                        faceStatus.style.fontWeight = '';
+                    }
+                } else {
+                    detectedStudent.textContent = 'Unknown Person';
+                    detectedStudent.style.display = 'inline';
+                    faceStatus.textContent = 'Unknown';
+                    faceStatus.className = 'face-status unknown';
+                }
+
+                detectionDisplay.style.display = 'inline-block';
+                if (noDetection) noDetection.style.display = 'none';
+            } else {
+                detectionDisplay.style.display = 'none';
+                if (noDetection) noDetection.style.display = 'inline';
+            }
+        }
+        
+        // Load attendance statistics
+        function loadAttendanceStats() {
+            fetch('/get_attendance_stats')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    totalStudents.textContent = data.total_students || '0';
+                    todaysAttendance.textContent = data.todays_attendance || '0';
+                }
+            })
+            .catch(error => {
+                console.error('Error loading attendance stats:', error);
+            });
+        }
+
+        // Load today's attendance list
+        function loadTodaysAttendanceList() {
+            fetch('/get_todays_attendance_list')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const listContainer = document.getElementById('todays-attendance-list');
+                    const lastUpdated = document.getElementById('last-updated');
+                    
+                    if (lastUpdated) {
+                        lastUpdated.textContent = `(Last updated: ${data.last_updated})`;
+                    }
+                    
+                    if (data.attendance && data.attendance.length > 0) {
+                        let html = '<div class="table-responsive"><table class="table table-striped table-hover">';
+                        html += '<thead><tr><th>#</th><th>Student ID</th><th>Name</th><th>Time</th><th>Subject</th><th>Emotion</th></tr></thead><tbody>';
+                        
+                        data.attendance.forEach((record, index) => {
+                            html += `<tr>
+                                <td>${index + 1}</td>
+                                <td><strong>${record.student_id}</strong></td>
+                                <td>${record.student_name}</td>
+                                <td>${record.time}</td>
+                                <td>${record.subject}</td>
+                                <td><span class="badge bg-info">${record.emotion}</span></td>
+                            </tr>`;
+                        });
+                        
+                        html += '</tbody></table></div>';
+                        html += `<p class="text-muted mt-2"><strong>Total: ${data.count} students marked present today</strong></p>`;
+                        listContainer.innerHTML = html;
+                    } else {
+                        listContainer.innerHTML = '<div class="alert alert-info"><i class="fas fa-info-circle me-2"></i>No attendance marked yet today.</div>';
+                    }
+                } else {
+                    console.error('Error loading today\'s attendance:', data.error);
+                    document.getElementById('todays-attendance-list').innerHTML = 
+                        '<div class="alert alert-warning">Error loading attendance data</div>';
+                }
+            })
+            .catch(error => {
+                console.error('Error loading today\'s attendance list:', error);
+                document.getElementById('todays-attendance-list').innerHTML = 
+                    '<div class="alert alert-danger">Error loading attendance data</div>';
+            });
+        }
+
+        // Auto-refresh attendance stats and list every second
+        setInterval(function() {
+            loadAttendanceStats();
+            loadTodaysAttendanceList();
+        }, 1000); // Refresh every 1 second
+        
+        // Load initial data
+        loadTodaysAttendanceList();
+    </script>
+</body>
+</html>
