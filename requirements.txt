@@ -31,8 +31,8 @@ torchvision>=0.20.0
 # Emotion Detection
 deepface>=0.0.79
 # TensorFlow and tf-keras updated for Python 3.13 compatibility
-tf-keras>=2.20.0
-tensorflow>=2.20.0
+tf-keras>=2.15.0
+tensorflow>=2.15.0
 
 # Scientific Computing
 numpy>=1.26.0
