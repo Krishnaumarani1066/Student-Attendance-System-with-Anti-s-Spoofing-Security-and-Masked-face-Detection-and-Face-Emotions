@@ -283,8 +283,8 @@ Database Query → Filter by Date/Student/Department
 
 ### Step 1: Clone Repository
 ```powershell
-cd "C:\Users\KIRAN V\Pictures\"
-git clone https://github.com/Kiranv2004/StudentAttendanceSystem.git
+cd "C:\Users\Krishnaumarani1066\Pictures\"
+git clone https://github.com/krishnaumarani1066/StudentAttendanceSystem.git
 cd StudentAttendanceSystem
 ```
 
@@ -823,6 +823,7 @@ StudentAttendanceSystem/
 ## 👨‍💻 Developer Information
 
 **Repository:** https://github.com/Krishnaumarani1066/Student-Attendance-System-with-Anti-s-Spoofing-Security-and-Masked-face-Detection-and-Face-Emotions
+
 **Developer:** KRISHNA LAGAMAPPA UMARANI
 **Last Updated:** MARCH 2026
 
